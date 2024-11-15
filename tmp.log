@@ -1,0 +1,26 @@
+LOAD SentenceTransformer
+LOAD SentenceTransformer
+LOAD SentenceTransformer
+LOAD SentenceTransformer
+LOAD SentenceTransformer
+------------------------------
+EPOCH: 1
+0 START
+1 START
+2 START
+3 START
+4 START
+5 START
+6 START
+7 START
+8 START
+9 START
+0 END ACC: 1
+1 END ACC: 4
+2 END ACC: 0
+3 END ACC: 2
+4 END ACC: 4
+5 END ACC: 1
+6 END ACC: 2
+7 END ACC: 2
+8 END ACC: 4

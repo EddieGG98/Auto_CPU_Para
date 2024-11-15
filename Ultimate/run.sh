@@ -1,0 +1,1 @@
+nohup python train_arithmatic.py --accname arithmatic_U.png >> arithmatic_U.log&
