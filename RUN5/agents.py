@@ -295,6 +295,48 @@ class swaper(base_agent):
                 task.data[task.rs1] = task.data[task.rs2]
                 task.data[task.rs2] = tmp
         return idx
+    
+class comparer(base_agent):
+
+    def __init__(self, L, neighbors, neighbor_encs, value_net:nn.Module, action_net:nn.Module):
+        
+        super().__init__(L, neighbors, neighbor_encs, value_net, action_net)
+        A   = np.random.rand(L-1, L-1)
+        self.action_enc,_= torch.tensor(np.array(np.linalg.qr(A)),dtype=torch.float32,device=DEVICE)
+
+    def operate(self, task:task_holder, alpha=1):
+        q_list = []
+        for i in range(self.L-1):
+            state_enc = torch.tensor(task.get_enc(), dtype=torch.float, device=DEVICE)
+            q = self.action_net(state_enc, self.action_enc[i])
+            q_list.append(q)
+        if np.random.rand() > alpha:
+            idx = np.random.randint(0, len(q_list))
+        else:
+            idx = q_list.index(max(q_list))
+        # Operate
+        tmp = task.data[idx]
+        task.data[idx] = task.data[idx+1]
+        task.data[idx+1] = tmp
+        task.record += f"Compare {idx} and {idx+1}\n"
+        return idx, q_list[idx]
+    
+    def operate_by_target(self, task:task_holder):
+        q_list = []
+        for i in range(self.L-1):
+            state_enc = torch.tensor(task.get_enc(), dtype=torch.float, device=DEVICE)
+            q = self.action_target_net(state_enc, self.action_enc[i])
+            q_list.append(q)
+        idx = q_list.index(max(q_list))
+        return idx, q_list[idx]
+    
+    def operate_random(self, task:task_holder):
+        idx = np.random.randint(0, self.L-1)
+        # Operate
+        tmp = task.data[idx]
+        task.data[idx] = task.data[idx+1]
+        task.data[idx+1] = tmp
+        return idx
 
 if __name__ == "__main__":
     import time

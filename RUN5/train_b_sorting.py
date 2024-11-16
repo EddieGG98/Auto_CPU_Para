@@ -7,13 +7,13 @@ import copy
 
 import torch.multiprocessing as mp
 import argparse
-from agents import pointer1, pointer2, swaper
+from agents import comparer
 from env import task_holder, generate_sorting_task
 from models import Bi_MLP
 
 mp.set_start_method("spawn", force=True)
 
-DEVICE          = "cuda:1"
+DEVICE          = "cuda:0"
 L               = 3
 B               = 8
 EPOCH_NUM       = 1000
@@ -115,26 +115,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     nets_value = [
-        Bi_MLP(input_size1=2*L+3, input_size2=4, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE)
-        for _ in range(3)
+        Bi_MLP(input_size1=2*L+3, input_size2=2, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE),
     ]
 
     nets_action = [
-        Bi_MLP(input_size1=2*L+3, input_size2=L, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE),
-        Bi_MLP(input_size1=2*L+3, input_size2=L, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE),
-        Bi_MLP(input_size1=2*L+3, input_size2=2, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE),
+        Bi_MLP(input_size1=2*L+3, input_size2=L-1, hidden_dim1=256, hidden_dim2=256, output_dim=1).to(DEVICE),
     ]
 
     for model in nets_action + nets_action:
         model.share_memory()
 
-    A = np.random.rand(4, 4)
+    A = np.random.rand(2, 2)
     agent_encs, _ = torch.tensor(np.array(np.linalg.qr(A)), dtype=torch.float32, device=DEVICE)
 
     agents = [
-        pointer1(L, [1,2  ], agent_encs, nets_value[0], nets_action[0]),
-        pointer2(L, [0,2  ], agent_encs, nets_value[1], nets_action[1]),
-        swaper  (L, [0,1,3], agent_encs, nets_value[2], nets_action[2]),
+        comparer(L, [0,1], agent_encs, nets_value[0], nets_action[0]),
     ]
 
     optimizer = optim.Adam(
